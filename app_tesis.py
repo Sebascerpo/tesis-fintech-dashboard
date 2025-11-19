@@ -457,7 +457,7 @@ if df is not None:
             st.plotly_chart(fig_coef, use_container_width=True)
 
             # --- 4. REDACCIÓN AUTOMÁTICA DE RESULTADOS ---
-            st.markdown("### 3. Conclusión en Lenguaje Natural")
+            st.markdown("### 3. Conclusión")
 
             # Acceso seguro a los coeficientes usando el índice
             try:
