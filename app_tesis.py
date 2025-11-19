@@ -381,7 +381,7 @@ if df is not None:
                     f"""
                 **Interpretación:** El modelo explica el **{r2:.1%}** de la variabilidad en la intención de uso.
                 El otro {100 - (r2*100):.1f}% depende de factores no medidos (publicidad, tasas de interés, necesidad económica, etc.).
-                *Nota: Un valor entre 20% y 40% se considera un hallazgo sólido, por lo tanto se podria argumentar que, si bien no es un valor tan significativo el obtenido, cuando consideramos las demas variables que condicionan el uso de estas tecnologias, resulta ser un dato no menor el obtenido   *
+                **Nota**: Un valor entre 20% y 40% se considera un hallazgo sólido, por lo tanto se podria argumentar que, si bien no es un valor tan significativo el obtenido, cuando consideramos las demas variables que condicionan el uso de estas tecnologias, resulta ser un dato no menor el obtenido  
                 """
                 )
 
