@@ -165,8 +165,7 @@ if df is not None:
                 df,
                 names="d_genero",
                 title="Composición por Género",
-                # Colores manuales de alto contraste: Azul Acero, Coral Oscuro, Gris Pizarra
-                color_discrete_sequence=['#4682B4', '#CD5C5C', '#708090'], 
+                color_discrete_sequence=px.colors.qualitative.Pastel,
                 template=template_style,
                 hole=0.4,
             )
