@@ -5,17 +5,14 @@ import plotly.express as px
 import plotly.graph_objects as go
 import statsmodels.api as sm
 from scipy.stats import kruskal, spearmanr
-import os  # <--- Agrega esto al inicio junto a los otros imports
+import os
 
-# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Análisis Fintech Colombia", layout="wide")
 template_style = "simple_white"
 
 
-# --- MÓDULO DE PROCESAMIENTO DE DATOS (ACTUALIZADO) ---
 @st.cache_data
 def get_data(file_path):
-    # 1. Carga agnóstica al encoding
     try:
         df = pd.read_csv(file_path, encoding="utf-8")
     except UnicodeDecodeError:
@@ -23,31 +20,24 @@ def get_data(file_path):
 
     df.dropna(how="all", inplace=True)
 
-    # 2. Diccionario de variables (EXPANDIDO)
     renames = {
-        # Variables Objetivo y Predictoras (Ya existentes)
         "11. En general, ¿qué tan probable es que en los próximos 12 meses continúes usando o recomiendes a otras personas las billeteras o créditos digitales?": "y_intencion",
         "5. En general, ¿qué tan seguro(a) te sientes al usar servicios Fintech para manejar tu dinero o tus datos personales?": "x_seguridad",
         "12. ¿Cómo calificas tu nivel de conocimiento o educación financiera para manejar servicios Fintech?": "x_educacion_fin",
         "8.  ¿Cuáles de los siguientes factores influyen más en tu confianza o desconfianza hacia las plataformas Fintech?": "txt_factores",
-        # Demográficos
         "13. Selecciona tu rango de edad:": "d_edad",
         "15. Selecciona tu género": "d_genero",
-        # Herramientas (NUEVO)
         " 1. En relación con el servicio Nequi, selecciona la opción que te describa mejor:": "uso_nequi",
         "2. En relación con el servicio Daviplata, selecciona la opción que te describa mejor:": "uso_daviplata",
         " 3. En relación con el servicio Addi, selecciona la opción que te describa mejor:": "uso_addi",
         "4. En relación con el servicio Sistecrédito, selecciona la opción que te describa mejor:": "uso_sistecredito",
-        # Experiencia y Comparación (NUEVO)
         "9. ¿Has tenido alguna experiencia negativa al usar billeteras o créditos digitales (errores, fraudes, demoras, mala atención)?": "exp_negativa",
         "10. En tu opinión, ¿las plataformas Fintech ofrecen una protección de datos personales igual, mejor o peor que la banca tradicional?": "comp_banca",
     }
 
-    # Normalización de nombres
     df.columns = df.columns.str.strip()
     df.rename(columns={k.strip(): v for k, v in renames.items()}, inplace=True)
 
-    # 3. Mapeos Numéricos (Igual que antes)
     map_seguridad = {
         "Nada seguro(a).": 1,
         "Poco seguro(a)": 2,
@@ -70,12 +60,10 @@ def get_data(file_path):
 
     map_edu = {"Nulo": 1, "Bajo": 2, "Medio": 3, "Alto": 4, "Muy alto": 5}
 
-    # Aplicar mapeos principales
     df["num_seguridad"] = df["x_seguridad"].map(map_seguridad)
     df["num_intencion"] = df["y_intencion"].map(map_intencion)
     df["num_educacion"] = df["x_educacion_fin"].map(map_edu)
 
-    # 4. Procesamiento de Texto (Factores)
     if "txt_factores" in df.columns:
         factors_list = df["txt_factores"].dropna().str.split(",").tolist()
         flat_list = [
@@ -92,7 +80,6 @@ def get_data(file_path):
     return df
 
 
-# --- INTERFAZ PRINCIPAL ---
 st.title("Análisis de Determinantes en la Adopción Fintech")
 st.markdown(
     """
@@ -106,7 +93,6 @@ ARCHIVO_POR_DEFECTO = "datos.csv"
 
 df = None
 
-# 1. Intentar cargar archivo local automáticamente
 if os.path.exists(ARCHIVO_POR_DEFECTO):
     try:
         df = get_data(ARCHIVO_POR_DEFECTO)
@@ -114,7 +100,6 @@ if os.path.exists(ARCHIVO_POR_DEFECTO):
     except Exception as e:
         st.error(f"Error al cargar el archivo local: {e}")
 
-# 2. Si no se encontró el automático, o si el usuario quiere cambiarlo
 if df is None:
     st.warning(
         f"No se encontró el archivo '{ARCHIVO_POR_DEFECTO}'. Por favor cárgalo manualmente."
@@ -123,28 +108,19 @@ if df is None:
     if uploaded_file:
         df = get_data(uploaded_file)
 
-# --- INICIO DEL DASHBOARD ---
 if df is not None:
-    # ... AQUÍ SIGUE EL RESTO DEL CÓDIGO (Tabs, Gráficos, etc.)
-    # A partir de aquí copias todo lo que tenías dentro del "if uploaded_file:" anterior
 
-    # Definición de Tabs
     tab1, tab2, tab3 = st.tabs(
         ["Análisis Descriptivo", "Inferencia Estadística", "Modelado Predictivo"]
     )
 
-    # --- TAB 1: DESCRIPTIVO (EXPANDIDO) ---
-    # --- TAB 1: ANÁLISIS DESCRIPTIVO (ESTÉTICA SOBRIA) ---
-    # --- TAB 1: ANÁLISIS DESCRIPTIVO (COLORES SÓLIDOS Y DISTINTIVOS) ---
     with tab1:
         st.header("Panorama General de la Muestra y Adopción")
 
-        # BLOQUE 1: DEMOGRAFÍA
         st.subheader("1. Caracterización Demográfica")
         col_d1, col_d2 = st.columns(2)
 
         with col_d1:
-            # Gráfico de Edades
             df_edad = df["d_edad"].value_counts().reset_index()
             df_edad.columns = ["Rango de Edad", "Frecuencia"]
 
@@ -153,9 +129,7 @@ if df is not None:
                 x="Rango de Edad",
                 y="Frecuencia",
                 title="Distribución por Rango de Edad",
-                # Coloreamos por Categoría para diferenciar claramente
                 color="Rango de Edad",
-                # "Safe": Paleta diseñada para ser distinta pero agradable a la vista (sin neones)
                 color_discrete_sequence=px.colors.qualitative.Safe,
                 template=template_style,
             )
@@ -163,7 +137,6 @@ if df is not None:
             st.plotly_chart(fig_edad, use_container_width=True)
 
         with col_d2:
-            # Gráfico de Género
             fig_gen = px.pie(
                 df,
                 names="d_genero",
@@ -176,7 +149,6 @@ if df is not None:
 
         st.markdown("---")
 
-        # BLOQUE 2: PENETRACIÓN DE MERCADO
         st.subheader("2. Penetración de Herramientas Fintech")
         st.markdown("Comparativa de usuarios activos ('Lo uso actualmente').")
 
@@ -207,7 +179,6 @@ if df is not None:
             text="Usuarios Activos",
             color="Herramienta",
             title="Cuota de Mercado",
-            # "Bold": Colores fuertes y sólidos para distinguir marcas claramente
             color_discrete_sequence=px.colors.qualitative.Bold,
             template=template_style,
         )
@@ -215,16 +186,14 @@ if df is not None:
 
         st.markdown("---")
 
-        # BLOQUE 3: SEGURIDAD Y EXPERIENCIA
         st.subheader("3. Percepción de Seguridad y Experiencia")
         col_s1, col_s2, col_s3 = st.columns(3)
 
         with col_s1:
             st.markdown("**Distribución de Seguridad (Sin Neutros)**")
 
-            # LOGICA DE FILTRADO
             df["num_seguridad"] = pd.to_numeric(df["num_seguridad"], errors="coerce")
-            df_sec_filtered = df[df["num_seguridad"] != 3]  # Excluir el 3
+            df_sec_filtered = df[df["num_seguridad"] != 3]
 
             sec_counts = df_sec_filtered["num_seguridad"].value_counts().reset_index()
             sec_counts.columns = ["Nivel", "Frecuencia"]
@@ -235,7 +204,6 @@ if df is not None:
                 x="Nivel",
                 y="Frecuencia",
                 title="Percepción (Excluyendo Neutrales)",
-                # Color Manual: Un Verde Bosque profesional (#2E8B57) en lugar de azul, para variar
                 color_discrete_sequence=["#2E8B57"],
                 template=template_style,
             )
@@ -252,7 +220,6 @@ if df is not None:
                     names="Opinión",
                     values="Conteo",
                     title="Comparativa de Protección",
-                    # Paleta distintiva: Dorado oscuro, Azul Medianoche, Gris
                     color_discrete_sequence=px.colors.qualitative.Safe,
                 )
                 st.plotly_chart(fig_comp, use_container_width=True)
@@ -263,27 +230,18 @@ if df is not None:
                 df_exp = df["exp_negativa"].value_counts().reset_index()
                 df_exp.columns = ["Experiencia Negativa", "Conteo"]
 
-                # SOLUCIÓN AL COLOR BLANCO:
-                # En lugar de colorear por conteo (que crea degradados blancos),
-                # coloreamos por la Categoría misma. Así cada barra tiene un color sólido diferente.
                 fig_exp = px.bar(
                     df_exp,
                     x="Experiencia Negativa",
                     y="Conteo",
                     title="Tipos de Incidentes",
-                    color="Experiencia Negativa",  # <--- Cambio clave
-                    # "Vivid": Colores vibrantes pero oscuros
+                    color="Experiencia Negativa",
                     color_discrete_sequence=px.colors.qualitative.Vivid,
                 )
                 fig_exp.update_xaxes(showticklabels=False)
-                fig_exp.update_layout(
-                    showlegend=False
-                )  # Ocultamos leyenda para limpiar
+                fig_exp.update_layout(showlegend=False)
                 st.plotly_chart(fig_exp, use_container_width=True)
 
-        # BLOQUE 4: FACTORES
-        # BLOQUE 4: FACTORES
-        # BLOQUE 4: FACTORES (COLORES NEUTROS Y DISTINTIVOS)
         st.markdown("---")
         st.markdown("**Factores Determinantes de Confianza**")
         factor_cols = [c for c in df.columns if c.startswith("factor_")]
@@ -294,26 +252,19 @@ if df is not None:
             x=factor_counts.values,
             y=factor_counts.index,
             orientation="h",
-            # 1. Coloreamos por Categoría (para que sean diferentes)
             color=factor_counts.index,
-            # 2. Usamos la paleta "Antique":
-            # Son colores 'Tierra' y 'Pastel Oscuro' (Musgo, Ladrillo, Pizarra, Ocre).
-            # Se diferencian muy bien entre sí, pero son elegantes y apagados.
             color_discrete_sequence=px.colors.qualitative.Antique,
             title="Desglose de Factores de Confianza",
             template=template_style,
         )
 
-        # Limpiamos el gráfico ocultando la leyenda (redundante)
         fig_factors.update_layout(showlegend=False)
 
         st.plotly_chart(fig_factors, use_container_width=True)
 
-    # --- TAB 2: INFERENCIA ---
     with tab2:
         st.subheader("Pruebas de Hipótesis")
 
-        # 1. Correlación Robusta
         st.markdown("#### 1. ¿Existe correlación entre Seguridad e Intención de Uso?")
         st.write(
             "Se utiliza el coeficiente de **Spearman** dado que las variables son ordinales (no siguen una distribución normal perfecta)."
@@ -337,7 +288,6 @@ if df is not None:
 
         st.markdown("---")
 
-        # 2. Diferencia de Grupos (Kruskal-Wallis)
         st.markdown("#### 2. ¿Varía la percepción de seguridad según el Género?")
         st.write(
             "Se aplica la prueba **U de Mann-Whitney** (o Kruskal-Wallis) para comparar las medianas de seguridad entre géneros."
@@ -362,7 +312,6 @@ if df is not None:
                     "Resultados: **Existen diferencias significativas** entre géneros."
                 )
 
-            # Boxplot para visualizar
             fig_box = px.box(
                 df,
                 x="d_genero",
@@ -373,8 +322,6 @@ if df is not None:
             )
             st.plotly_chart(fig_box, use_container_width=True)
 
-    # --- TAB 3: MODELADO AVANZADO ---
-    # --- TAB 3: MODELADO PREDICTIVO (VERSIÓN EXPLICATIVA Y VISUAL) ---
     with tab3:
         st.header("Modelo de Regresión e Interpretación de Impacto")
 
@@ -389,22 +336,17 @@ if df is not None:
         """,
             unsafe_allow_html=True,
         )
-        st.write("")  # Espacio
+        st.write("")
 
-        # --- 1. EJECUCIÓN DEL MODELO ---
-        # Preparación de datos
         X = df[["num_seguridad", "num_educacion"]].dropna()
 
-        # Asegurar tipos numéricos
         X = X.apply(pd.to_numeric, errors="coerce").dropna()
         y = df.loc[X.index, "num_intencion"]
 
-        # Añadimos constante solo si hay datos
         if not X.empty:
             X = sm.add_constant(X)
             model = sm.OLS(y, X).fit()
 
-            # --- 2. CALIDAD DEL MODELO ---
             st.subheader("1. ¿Podemos confiar en este análisis?")
 
             col_metric1, col_metric2 = st.columns(2)
@@ -433,7 +375,6 @@ if df is not None:
 
             st.markdown("---")
 
-            # --- 3. GRÁFICO DE BARRAS (COEFICIENTES) ---
             st.subheader("2. ¿Qué pesa más en la decisión?")
             st.markdown(
                 """
@@ -444,7 +385,6 @@ if df is not None:
             """
             )
 
-            # Diccionario amigable
             nombres_amigables = {
                 "const": "Constante (Base)",
                 "num_seguridad": "Percepción de Seguridad",
@@ -460,7 +400,6 @@ if df is not None:
                 }
             )
 
-            # Filtros para gráfica
             plot_df = results_df[results_df["Variable"] != "Constante (Base)"].copy()
             plot_df["Confiabilidad"] = plot_df["Valor P"].apply(
                 lambda x: (
@@ -470,17 +409,16 @@ if df is not None:
                 )
             )
 
-            # GRÁFICO DE BARRAS SIMPLE
             fig_coef = px.bar(
                 plot_df,
                 x="Impacto",
                 y="Variable",
                 color="Confiabilidad",
                 orientation="h",
-                text_auto=".2f",  # Muestra el número en la barra
+                text_auto=".2f",
                 color_discrete_map={
-                    "Datos Confiables (Significativo)": "#2ecc71",  # Verde
-                    "Datos Inciertos (No Sig.)": "#bdc3c7",  # Gris
+                    "Datos Confiables (Significativo)": "#2ecc71",
+                    "Datos Inciertos (No Sig.)": "#bdc3c7",
                 },
                 title="Peso de cada factor en la Intención de Uso",
             )
@@ -490,11 +428,10 @@ if df is not None:
                 yaxis_title="",
                 legend_title="Calidad del Dato",
                 template="simple_white",
-                font=dict(size=14),  # Letra más grande para leer mejor
+                font=dict(size=14),
             )
             st.plotly_chart(fig_coef, use_container_width=True)
 
-            # --- REDACCIÓN AUTOMÁTICA ---
             try:
                 coef_seg = model.params["num_seguridad"]
 
@@ -514,9 +451,6 @@ if df is not None:
 
             st.markdown("---")
 
-# BLOQUE 5: ANÁLISIS DE FACTORES Y SEGURIDAD
-# BLOQUE 5: ANÁLISIS DE FACTORES (CON PALETA 'SAFE')
-# BLOQUE 5: ANÁLISIS DE FACTORES (ORDEN CORREGIDO + COLORES SAFE)
             st.subheader("3. ¿Qué hace que la gente se sienta segura?")
             st.markdown(
                 "Analizamos la correlación estadística: ¿Qué palabras clave están más asociadas a decir 'Me siento seguro'?"
@@ -536,39 +470,33 @@ if df is not None:
                 ).reset_index()
 
                 df_corr_factors.columns = ["Factor", "Correlación"]
-                
-                # 1. ORDENAMIENTO: Aseguramos que el DataFrame esté ordenado matemáticamente
-                df_corr_factors = df_corr_factors.sort_values(by="Correlación", ascending=True)
 
-                # GRÁFICO DE BARRAS
+                df_corr_factors = df_corr_factors.sort_values(
+                    by="Correlación", ascending=True
+                )
+
                 fig_factors = px.bar(
                     df_corr_factors,
                     x="Correlación",
                     y="Factor",
                     orientation="h",
-                    
-                    # COLOREADO: Usamos el Factor para tener colores distintos
                     color="Factor",
-                    
-                    # PALETA: La que te gustó (Safe)
                     color_discrete_sequence=px.colors.qualitative.Safe,
-                    
                     title="Impacto de cada característica en la sensación de Seguridad",
                 )
 
                 fig_factors.add_vline(x=0, line_width=2, line_color="#333333")
-                
-                # 2. FORZAR ORDEN VISUAL:
-                # Esta línea obliga a Plotly a respetar el orden del DataFrame (df_corr_factors['Factor'])
-                # evitando que los desordene al aplicar los colores.
-                fig_factors.update_yaxes(categoryorder='array', categoryarray=df_corr_factors['Factor'])
+
+                fig_factors.update_yaxes(
+                    categoryorder="array", categoryarray=df_corr_factors["Factor"]
+                )
 
                 fig_factors.update_layout(
                     xaxis_title="Relación con la Seguridad (Negativa < 0 > Positiva)",
                     yaxis_title="",
                     template="simple_white",
-                    showlegend=False, # Ocultamos leyenda para limpieza
-                    font=dict(size=12)
+                    showlegend=False,
+                    font=dict(size=12),
                 )
                 st.plotly_chart(fig_factors, use_container_width=True)
 
