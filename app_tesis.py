@@ -516,6 +516,7 @@ if df is not None:
 
 # BLOQUE 5: ANÁLISIS DE FACTORES Y SEGURIDAD
 # BLOQUE 5: ANÁLISIS DE FACTORES (CON PALETA 'SAFE')
+# BLOQUE 5: ANÁLISIS DE FACTORES (ORDEN CORREGIDO + COLORES SAFE)
             st.subheader("3. ¿Qué hace que la gente se sienta segura?")
             st.markdown(
                 "Analizamos la correlación estadística: ¿Qué palabras clave están más asociadas a decir 'Me siento seguro'?"
@@ -535,22 +536,21 @@ if df is not None:
                 ).reset_index()
 
                 df_corr_factors.columns = ["Factor", "Correlación"]
-                df_corr_factors = df_corr_factors.sort_values(
-                    by="Correlación", ascending=True
-                )
+                
+                # 1. ORDENAMIENTO: Aseguramos que el DataFrame esté ordenado matemáticamente
+                df_corr_factors = df_corr_factors.sort_values(by="Correlación", ascending=True)
 
-                # GRÁFICO DE BARRAS CON PALETA "SAFE"
+                # GRÁFICO DE BARRAS
                 fig_factors = px.bar(
                     df_corr_factors,
                     x="Correlación",
                     y="Factor",
                     orientation="h",
                     
-                    # CAMBIO CLAVE 1: Coloreamos por 'Factor' (Categoría)
-                    # Esto permite que cada barra tenga un color distinto de la lista 'Safe'
+                    # COLOREADO: Usamos el Factor para tener colores distintos
                     color="Factor",
                     
-                    # CAMBIO CLAVE 2: Tu paleta solicitada
+                    # PALETA: La que te gustó (Safe)
                     color_discrete_sequence=px.colors.qualitative.Safe,
                     
                     title="Impacto de cada característica en la sensación de Seguridad",
@@ -558,19 +558,24 @@ if df is not None:
 
                 fig_factors.add_vline(x=0, line_width=2, line_color="#333333")
                 
+                # 2. FORZAR ORDEN VISUAL:
+                # Esta línea obliga a Plotly a respetar el orden del DataFrame (df_corr_factors['Factor'])
+                # evitando que los desordene al aplicar los colores.
+                fig_factors.update_yaxes(categoryorder='array', categoryarray=df_corr_factors['Factor'])
+
                 fig_factors.update_layout(
                     xaxis_title="Relación con la Seguridad (Negativa < 0 > Positiva)",
                     yaxis_title="",
                     template="simple_white",
-                    showlegend=False, # Ocultamos la leyenda para que se vea más limpio
+                    showlegend=False, # Ocultamos leyenda para limpieza
                     font=dict(size=12)
                 )
                 st.plotly_chart(fig_factors, use_container_width=True)
 
                 st.info(
                     """
-                **Nota de Lectura:** Las barras que van hacia la **derecha** son características que aumentan la seguridad percibida.
-                Las barras hacia la **izquierda** son factores asociados a menor seguridad en esta muestra.
+                **Nota de Lectura:** * Barras hacia la **Derecha**: Factores que generan confianza (Positivos).
+                * Barras hacia la **Izquierda**: Factores asociados a desconfianza (Negativos).
                 """
                 )
         else:
