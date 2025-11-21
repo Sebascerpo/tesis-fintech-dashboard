@@ -131,6 +131,7 @@ if df is not None:
     )
 
     # --- TAB 1: DESCRIPTIVO (EXPANDIDO) ---
+# --- TAB 1: ANÁLISIS DESCRIPTIVO (DISEÑO MEJORADO) ---
     with tab1:
         st.header("Panorama General de la Muestra y Adopción")
 
@@ -142,15 +143,21 @@ if df is not None:
             # Gráfico de Edades
             df_edad = df["d_edad"].value_counts().reset_index()
             df_edad.columns = ["Rango de Edad", "Frecuencia"]
+            
             fig_edad = px.bar(
                 df_edad,
                 x="Rango de Edad",
                 y="Frecuencia",
                 title="Distribución por Rango de Edad",
-                color="Frecuencia",
-                color_continuous_scale="Blues",
+                # CAMBIO CLAVE: Coloreamos por la etiqueta (Edad) y no por el número
+                color="Rango de Edad", 
+                # "Prism": Una paleta de alto contraste (colores muy distintos entre sí)
+                color_discrete_sequence=px.colors.qualitative.Prism,
                 template=template_style,
             )
+            
+            # Opcional: Ocultar la leyenda si ya se ve en el eje X para limpiar visualmente
+            fig_edad.update_layout(showlegend=False)
             st.plotly_chart(fig_edad, use_container_width=True)
 
         with col_d2:
@@ -159,7 +166,8 @@ if df is not None:
                 df,
                 names="d_genero",
                 title="Composición por Género",
-                color_discrete_sequence=px.colors.qualitative.Pastel,
+                # "Set3": Colores pastel distintivos pero suaves a la vista
+                color_discrete_sequence=px.colors.qualitative.Set3,
                 template=template_style,
                 hole=0.4,
             )
@@ -180,7 +188,6 @@ if df is not None:
 
         for tool in tools:
             if tool in df.columns:
-                # Contamos solo los que dicen explícitamente "Lo uso actualmente."
                 count = df[
                     df[tool]
                     .astype(str)
@@ -202,7 +209,8 @@ if df is not None:
             text="Usuarios Activos",
             color="Herramienta",
             title="Cuota de Mercado en la Muestra (Usuarios Activos)",
-            color_discrete_sequence=px.colors.qualitative.Prism,
+            # "Bold": Colores fuertes y sólidos para distinguir marcas claramente
+            color_discrete_sequence=px.colors.qualitative.Bold,
             template=template_style,
         )
         st.plotly_chart(fig_adopt, use_container_width=True)
@@ -220,7 +228,8 @@ if df is not None:
                 x="num_seguridad",
                 nbins=5,
                 title="Percepción General (1-5)",
-                color_discrete_sequence=["#2c3e50"],
+                # Un color Índigo sólido (#4F46E5) que denota tecnología/seriedad
+                color_discrete_sequence=["#4F46E5"],
                 template=template_style,
             )
             fig_sec.update_layout(
@@ -238,7 +247,8 @@ if df is not None:
                     names="Opinión",
                     values="Conteo",
                     title="Protección de Datos: Comparativa",
-                    color_discrete_sequence=px.colors.sequential.RdBu,
+                    # "Safe": Paleta diseñada para ser clara y agradable
+                    color_discrete_sequence=px.colors.qualitative.Safe,
                 )
                 st.plotly_chart(fig_comp, use_container_width=True)
 
@@ -247,21 +257,20 @@ if df is not None:
             if "exp_negativa" in df.columns:
                 df_exp = df["exp_negativa"].value_counts().reset_index()
                 df_exp.columns = ["Experiencia Negativa", "Conteo"]
-                # Simplificar etiquetas largas si es necesario
+                
                 fig_exp = px.bar(
                     df_exp,
                     x="Experiencia Negativa",
                     y="Conteo",
                     title="Reporte de Incidentes",
                     color="Conteo",
-                    color_continuous_scale="Reds",
+                    # "YlOrRd": De Amarillo a Rojo Intenso (Alerta)
+                    color_continuous_scale="YlOrRd",
                 )
-                fig_exp.update_xaxes(
-                    showticklabels=False
-                )  # Ocultar texto largo si molesta
+                fig_exp.update_xaxes(showticklabels=False)
                 st.plotly_chart(fig_exp, use_container_width=True)
 
-        # BLOQUE 4: FACTORES (Conservado)
+        # BLOQUE 4: FACTORES
         st.markdown("---")
         st.markdown("**Factores Determinantes de Confianza**")
         factor_cols = [c for c in df.columns if c.startswith("factor_")]
@@ -273,7 +282,8 @@ if df is not None:
             y=factor_counts.index,
             orientation="h",
             color=factor_counts.values,
-            color_continuous_scale="Blues",
+            # "Viridis": La paleta más profesional en ciencia de datos (Azul a Amarillo)
+            color_continuous_scale="Viridis",
             title="Desglose de Factores de Confianza (Múltiple Respuesta)",
             template=template_style,
         )
@@ -344,21 +354,25 @@ if df is not None:
             st.plotly_chart(fig_box, use_container_width=True)
 
     # --- TAB 3: MODELADO AVANZADO ---
-    # --- TAB 3: MODELADO PREDICTIVO (CORREGIDO Y ROBUSTO) ---
+# --- TAB 3: MODELADO PREDICTIVO (VERSIÓN EXPLICATIVA Y VISUAL) ---
     with tab3:
         st.header("Modelo de Regresión e Interpretación de Impacto")
 
-        st.markdown(
-            """
-        Esta sección utiliza un modelo de **Mínimos Cuadrados Ordinarios (OLS)** para determinar matemáticamente qué pesa más en la mente del consumidor: ¿Es la seguridad? ¿O es su educación financiera?
-        """
-        )
+        st.markdown("""
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid #4CAF50;">
+        <strong>¿Qué hace esta sección?</strong><br>
+        Aquí usamos matemáticas (Regresión Estadística) para "pesar" las variables. 
+        Imagine una balanza: ponemos la <strong>Seguridad</strong> en un lado y la <strong>Educación Financiera</strong> en el otro. 
+        El modelo nos dice cuál de las dos inclina más la balanza hacia la decisión de usar la App.
+        </div>
+        """, unsafe_allow_html=True)
+        st.write("") # Espacio
 
         # --- 1. EJECUCIÓN DEL MODELO ---
         # Preparación de datos
         X = df[["num_seguridad", "num_educacion"]].dropna()
 
-        # Asegurar que los tipos de datos sean numéricos para evitar errores
+        # Asegurar tipos numéricos
         X = X.apply(pd.to_numeric, errors="coerce").dropna()
         y = df.loc[X.index, "num_intencion"]
 
@@ -367,124 +381,100 @@ if df is not None:
             X = sm.add_constant(X)
             model = sm.OLS(y, X).fit()
 
-            # --- 2. CALIDAD DEL MODELO (EL "FIT") ---
-            st.subheader("1. ¿Qué tan bueno es este modelo para explicar la realidad?")
+            # --- 2. CALIDAD DEL MODELO ---
+            st.subheader("1. ¿Podemos confiar en este análisis?")
 
             col_metric1, col_metric2 = st.columns(2)
-
             r2 = model.rsquared
             p_f = model.f_pvalue
 
             with col_metric1:
-                st.metric(label="R-Cuadrado (Poder Explicativo)", value=f"{r2:.1%}")
-                st.info(
-                    f"""
-                **Interpretación:** El modelo explica el **{r2:.1%}** de la variabilidad en la intención de uso.
-                El otro {100 - (r2*100):.1f}% depende de factores no medidos (publicidad, tasas de interés, necesidad económica, etc.).
-                **Nota**: Un valor entre 20% y 40% se considera un hallazgo sólido, por lo tanto se podria argumentar que, si bien no es un valor tan significativo el obtenido, cuando consideramos las demas variables que condicionan el uso de estas tecnologias, resulta ser un dato no menor el obtenido  
-                """
-                )
+                st.metric(label="Poder Explicativo (R²)", value=f"{r2:.1%}")
+                st.info(f"""
+                **Lectura Fácil:** Este modelo explica el **{r2:.1%}** del comportamiento de los usuarios.
+                El porcentaje restante depende de cosas que no preguntamos (como tasas de interés, publicidad, necesidad urgente, etc.).
+                """)
 
             with col_metric2:
-                st.metric(
-                    label="Validez Global del Modelo (Valor P)", value=f"{p_f:.4f}"
-                )
+                st.metric(label="Certeza Estadística (Valor P)", value=f"{p_f:.4f}")
                 if p_f < 0.05:
-                    st.success(
-                        """
-                    **El modelo es Estadísticamente Válido.** El valor P es menor a 0.05, lo que indica que las variables elegidas sí tienen una relación real con la Intención de Uso.
-                    """
-                    )
+                    st.success("**Veredicto:** El análisis es SÓLIDO. Los resultados no son producto de la suerte.")
                 else:
-                    st.error(
-                        "El modelo no tiene suficiente potencia estadística para sacar conclusiones generalizables."
-                    )
+                    st.error("**Veredicto:** Cuidado. Los datos no son suficientes para sacar conclusiones definitivas.")
 
             st.markdown("---")
 
-            # --- 3. ANÁLISIS DE COEFICIENTES (SOLUCIÓN ERROR) ---
-            st.subheader("2. ¿Cuánto influye cada variable?")
-            st.markdown(
-                "Aquí desglosamos el peso específico de cada factor. Un valor positivo indica que ayuda a la adopción."
-            )
+            # --- 3. GRÁFICO DE BARRAS (COEFICIENTES) ---
+            st.subheader("2. ¿Qué pesa más en la decisión?")
+            st.markdown("""
+            El siguiente gráfico muestra la **fuerza** de cada variable.
+            * **Barra Larga:** Influye mucho.
+            * **Barra Verde:** Es un dato confirmado estadísticamente.
+            * **Barra Gris:** El dato es incierto (podría ser casualidad).
+            """)
 
-            # Diccionario para traducir los nombres técnicos a nombres amigables
+            # Diccionario amigable
             nombres_amigables = {
                 "const": "Constante (Base)",
                 "num_seguridad": "Percepción de Seguridad",
                 "num_educacion": "Educación Financiera",
             }
-
-            # Creamos la lista de variables dinámicamente basada en lo que el modelo realmente usó
-            # Esto evita el error "Arrays must be same length"
             variables_modelo = [nombres_amigables.get(v, v) for v in model.params.index]
 
-            results_df = pd.DataFrame(
-                {
-                    "Variable": variables_modelo,
-                    "Coeficiente (Peso)": model.params.values,
-                    "Error Std": model.bse.values,
-                    "Valor P": model.pvalues.values,
-                    "Confianza Baja (95%)": model.conf_int()[0].values,
-                    "Confianza Alta (95%)": model.conf_int()[1].values,
-                }
-            )
+            results_df = pd.DataFrame({
+                "Variable": variables_modelo,
+                "Impacto": model.params.values,
+                "Valor P": model.pvalues.values
+            })
 
-            # Ocultamos la constante para el gráfico para no distorsionar la escala
+            # Filtros para gráfica
             plot_df = results_df[results_df["Variable"] != "Constante (Base)"].copy()
-            plot_df["Significativo"] = plot_df["Valor P"].apply(
-                lambda x: "Sí (Confiable)" if x < 0.05 else "No (Incierto)"
-            )
-
-            # GRÁFICO DE FOREST PLOT
+            plot_df["Confiabilidad"] = plot_df["Valor P"].apply(lambda x: "Datos Confiables (Significativo)" if x < 0.05 else "Datos Inciertos (No Sig.)")
+            
+            # GRÁFICO DE BARRAS SIMPLE
             fig_coef = px.bar(
                 plot_df,
-                x="Coeficiente (Peso)",
+                x="Impacto",
                 y="Variable",
-                error_x_minus=plot_df["Coeficiente (Peso)"]
-                - plot_df["Confianza Baja (95%)"],
-                error_x=plot_df["Confianza Alta (95%)"] - plot_df["Coeficiente (Peso)"],
-                color="Significativo",
+                color="Confiabilidad",
                 orientation="h",
+                text_auto='.2f', # Muestra el número en la barra
                 color_discrete_map={
-                    "Sí (Confiable)": "#2ecc71",
-                    "No (Incierto)": "#95a5a6",
+                    "Datos Confiables (Significativo)": "#2ecc71", # Verde
+                    "Datos Inciertos (No Sig.)": "#bdc3c7"  # Gris
                 },
-                title="Impacto Relativo de cada Variable en la Intención de Uso",
+                title="Peso de cada factor en la Intención de Uso"
             )
-            fig_coef.add_vline(x=0, line_width=2, line_dash="dash", line_color="black")
-            fig_coef.update_layout(template="simple_white")
+            
+            fig_coef.update_layout(
+                xaxis_title="Puntos de Aumento en la Intención de Uso",
+                yaxis_title="",
+                legend_title="Calidad del Dato",
+                template="simple_white",
+                font=dict(size=14) # Letra más grande para leer mejor
+            )
             st.plotly_chart(fig_coef, use_container_width=True)
 
-            # --- 4. REDACCIÓN AUTOMÁTICA DE RESULTADOS ---
-            st.markdown("### 3. Conclusión")
-
-            # Acceso seguro a los coeficientes usando el índice
+            # --- REDACCIÓN AUTOMÁTICA ---
             try:
                 coef_seg = model.params["num_seguridad"]
-                pval_seg = model.pvalues["num_seguridad"]
-                coef_edu = model.params["num_educacion"]
-
-                conclusion_text = f"""
-                El análisis de regresión revela lo siguiente:
                 
-                1.  **El Rol de la Seguridad:** Existe una relación **{'positiva' if coef_seg > 0 else 'negativa'}**. 
-                    Por cada punto que mejora la percepción de seguridad del usuario, su probabilidad de adopción aumenta en **{coef_seg:.2f} puntos**.
-                    Dado que el Valor P es **{pval_seg:.4f}** ({'menor' if pval_seg < 0.05 else 'mayor'} a 0.05), podemos afirmar con un 95% de confianza que **la seguridad {'SÍ' if pval_seg < 0.05 else 'NO'} es un factor determinante** en la decisión.
-                    
-                2.  **Comparación con Educación:** El coeficiente de la educación financiera es de **{coef_edu:.2f}**. 
-                    {'Esto sugiere que la seguridad pesa más que el conocimiento técnico.' if abs(coef_seg) > abs(coef_edu) else 'Esto indica que la educación financiera es un predictor más fuerte que la seguridad.'}
-                """
-                st.info(conclusion_text)
-            except KeyError:
-                st.warning(
-                    "No se pudieron extraer coeficientes específicos para la redacción automática."
-                )
+                st.markdown(f"""
+                <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                    <strong>Conclusión para el Lector:</strong><br>
+                    Por cada punto que usted logre aumentar la <b>Seguridad Percibida</b> en sus usuarios, 
+                    la probabilidad de que usen su servicio aumentará en <b>{coef_seg:.2f} puntos</b>.
+                    Es decir, invertir en seguridad tiene un retorno directo en la adopción.
+                </div>
+                """, unsafe_allow_html=True)
+            except:
+                pass
 
             st.markdown("---")
 
-            # --- 5. FACTORES ESPECÍFICOS (CORRELACIONES) ---
-            st.subheader("4. Análisis Exploratorio: ¿Qué construye la seguridad?")
+            # --- 4. GRÁFICO DE BARRAS (FACTORES) ---
+            st.subheader("3. ¿Qué hace que la gente se sienta segura?")
+            st.markdown("Analizamos qué palabras clave tienen más relación con una calificación alta de seguridad.")
 
             factor_cols = [c for c in df.columns if c.startswith("factor_")]
             correlations = {}
@@ -497,30 +487,37 @@ if df is not None:
 
                 df_corr_factors = pd.DataFrame.from_dict(
                     correlations, orient="index", columns=["Correlación"]
-                )
-                df_corr_factors = df_corr_factors.sort_values(
-                    by="Correlación", ascending=False
-                )
+                ).reset_index()
+                
+                df_corr_factors.columns = ['Factor', 'Correlación']
+                df_corr_factors = df_corr_factors.sort_values(by="Correlación", ascending=True) # Ordenar para el gráfico
 
-                fig_heat = px.imshow(
-                    df_corr_factors.T,
-                    color_continuous_scale="RdBu",
-                    range_color=[-0.3, 0.3],
-                    aspect="auto",
-                    labels=dict(color="Fuerza de Asociación"),
+                # GRÁFICO DE BARRAS DIVERGENTES
+                fig_factors = px.bar(
+                    df_corr_factors,
+                    x="Correlación",
+                    y="Factor",
+                    orientation='h',
+                    color="Correlación",
+                    color_continuous_scale="RdBu_r", # Rojo a Azul (Invertido para que Azul sea positivo)
+                    title="Impacto de cada característica en la sensación de Seguridad"
                 )
-                fig_heat.update_layout(
-                    title="Asociación entre Atributos Específicos y Sensación de Seguridad",
-                    yaxis_showticklabels=False,
-                    height=250,
+                
+                fig_factors.add_vline(x=0, line_width=2, line_color="black")
+                fig_factors.update_layout(
+                    xaxis_title="Relación con la Seguridad (Negativa < 0 > Positiva)",
+                    yaxis_title="",
+                    template="simple_white"
                 )
-                st.plotly_chart(fig_heat, use_container_width=True)
-                st.caption(
-                    "*Rojo = Aumenta seguridad percibida | Azul = Disminuye seguridad percibida*"
-                )
+                st.plotly_chart(fig_factors, use_container_width=True)
+                
+                st.info("""
+                **Cómo leer este gráfico:**
+                * Barras hacia la **Derecha (Azul)**: Son los "Ganadores". Mencionar estos factores hace que la gente se sienta más segura.
+                * Barras hacia la **Izquierda (Rojo)**: Son factores que, curiosamente, podrían estar asociados a dudas o menor seguridad en esta muestra.
+                """)
+
         else:
-            st.error(
-                "No hay suficientes datos válidos para generar el modelo de regresión."
-            )
+            st.error("No hay suficientes datos válidos para generar el modelo.")
 else:
     st.info("Esperando archivo CSV para iniciar análisis profesional.")
