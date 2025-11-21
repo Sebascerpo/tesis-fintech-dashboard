@@ -131,7 +131,8 @@ if df is not None:
     )
 
     # --- TAB 1: DESCRIPTIVO (EXPANDIDO) ---
-# --- TAB 1: ANÁLISIS DESCRIPTIVO (DISEÑO MEJORADO) ---
+ # --- TAB 1: ANÁLISIS DESCRIPTIVO (ESTÉTICA SOBRIA) ---
+# --- TAB 1: ANÁLISIS DESCRIPTIVO (COLORES SÓLIDOS Y DISTINTIVOS) ---
     with tab1:
         st.header("Panorama General de la Muestra y Adopción")
 
@@ -149,14 +150,12 @@ if df is not None:
                 x="Rango de Edad",
                 y="Frecuencia",
                 title="Distribución por Rango de Edad",
-                # CAMBIO CLAVE: Coloreamos por la etiqueta (Edad) y no por el número
+                # Coloreamos por Categoría para diferenciar claramente
                 color="Rango de Edad", 
-                # "Prism": Una paleta de alto contraste (colores muy distintos entre sí)
-                color_discrete_sequence=px.colors.qualitative.Prism,
+                # "Safe": Paleta diseñada para ser distinta pero agradable a la vista (sin neones)
+                color_discrete_sequence=px.colors.qualitative.Safe,
                 template=template_style,
             )
-            
-            # Opcional: Ocultar la leyenda si ya se ve en el eje X para limpiar visualmente
             fig_edad.update_layout(showlegend=False)
             st.plotly_chart(fig_edad, use_container_width=True)
 
@@ -166,8 +165,8 @@ if df is not None:
                 df,
                 names="d_genero",
                 title="Composición por Género",
-                # "Set3": Colores pastel distintivos pero suaves a la vista
-                color_discrete_sequence=px.colors.qualitative.Set3,
+                # Colores manuales de alto contraste: Azul Acero, Coral Oscuro, Gris Pizarra
+                color_discrete_sequence=['#4682B4', '#CD5C5C', '#708090'], 
                 template=template_style,
                 hole=0.4,
             )
@@ -177,29 +176,20 @@ if df is not None:
 
         # BLOQUE 2: PENETRACIÓN DE MERCADO
         st.subheader("2. Penetración de Herramientas Fintech")
-        st.markdown(
-            "Comparativa de usuarios activos ('Lo uso actualmente') entre billeteras y créditos."
-        )
+        st.markdown("Comparativa de usuarios activos ('Lo uso actualmente').")
 
-        # Cálculo de métricas de adopción
         tools = ["uso_nequi", "uso_daviplata", "uso_addi", "uso_sistecredito"]
         tool_names = ["Nequi", "Daviplata", "Addi", "Sistecrédito"]
         adoption_rates = []
 
         for tool in tools:
             if tool in df.columns:
-                count = df[
-                    df[tool]
-                    .astype(str)
-                    .str.contains("actualmente", case=False, na=False)
-                ].shape[0]
+                count = df[df[tool].astype(str).str.contains("actualmente", case=False, na=False)].shape[0]
                 adoption_rates.append(count)
             else:
                 adoption_rates.append(0)
 
-        df_adoption = pd.DataFrame(
-            {"Herramienta": tool_names, "Usuarios Activos": adoption_rates}
-        )
+        df_adoption = pd.DataFrame({"Herramienta": tool_names, "Usuarios Activos": adoption_rates})
         df_adoption = df_adoption.sort_values("Usuarios Activos", ascending=False)
 
         fig_adopt = px.bar(
@@ -208,7 +198,7 @@ if df is not None:
             y="Usuarios Activos",
             text="Usuarios Activos",
             color="Herramienta",
-            title="Cuota de Mercado en la Muestra (Usuarios Activos)",
+            title="Cuota de Mercado",
             # "Bold": Colores fuertes y sólidos para distinguir marcas claramente
             color_discrete_sequence=px.colors.qualitative.Bold,
             template=template_style,
@@ -222,23 +212,30 @@ if df is not None:
         col_s1, col_s2, col_s3 = st.columns(3)
 
         with col_s1:
-            st.markdown("**Distribución de Seguridad**")
-            fig_sec = px.histogram(
-                df,
-                x="num_seguridad",
-                nbins=5,
-                title="Percepción General (1-5)",
-                # Un color Índigo sólido (#4F46E5) que denota tecnología/seriedad
-                color_discrete_sequence=["#4F46E5"],
+            st.markdown("**Distribución de Seguridad (Sin Neutros)**")
+            
+            # LOGICA DE FILTRADO
+            df['num_seguridad'] = pd.to_numeric(df['num_seguridad'], errors='coerce')
+            df_sec_filtered = df[df['num_seguridad'] != 3] # Excluir el 3
+            
+            sec_counts = df_sec_filtered['num_seguridad'].value_counts().reset_index()
+            sec_counts.columns = ['Nivel', 'Frecuencia']
+            sec_counts = sec_counts.sort_values('Nivel')
+
+            fig_sec = px.bar(
+                sec_counts,
+                x="Nivel",
+                y="Frecuencia",
+                title="Percepción (Excluyendo Neutrales)",
+                # Color Manual: Un Verde Bosque profesional (#2E8B57) en lugar de azul, para variar
+                color_discrete_sequence=["#2E8B57"], 
                 template=template_style,
             )
-            fig_sec.update_layout(
-                xaxis_title="Nivel de Seguridad", yaxis_title="Frecuencia"
-            )
+            fig_sec.update_xaxes(type='category') 
             st.plotly_chart(fig_sec, use_container_width=True)
 
         with col_s2:
-            st.markdown("**Fintech vs. Banca Tradicional**")
+            st.markdown("**Fintech vs. Banca**")
             if "comp_banca" in df.columns:
                 df_comp = df["comp_banca"].value_counts().reset_index()
                 df_comp.columns = ["Opinión", "Conteo"]
@@ -246,31 +243,37 @@ if df is not None:
                     df_comp,
                     names="Opinión",
                     values="Conteo",
-                    title="Protección de Datos: Comparativa",
-                    # "Safe": Paleta diseñada para ser clara y agradable
-                    color_discrete_sequence=px.colors.qualitative.Safe,
+                    title="Comparativa de Protección",
+                    # Paleta distintiva: Dorado oscuro, Azul Medianoche, Gris
+                    color_discrete_sequence=['#B8860B', '#191970', '#A9A9A9'],
                 )
                 st.plotly_chart(fig_comp, use_container_width=True)
 
         with col_s3:
-            st.markdown("**Incidencia de Fraudes/Errores**")
+            st.markdown("**Incidentes Reportados**")
             if "exp_negativa" in df.columns:
                 df_exp = df["exp_negativa"].value_counts().reset_index()
                 df_exp.columns = ["Experiencia Negativa", "Conteo"]
                 
+                # SOLUCIÓN AL COLOR BLANCO:
+                # En lugar de colorear por conteo (que crea degradados blancos),
+                # coloreamos por la Categoría misma. Así cada barra tiene un color sólido diferente.
                 fig_exp = px.bar(
                     df_exp,
                     x="Experiencia Negativa",
                     y="Conteo",
-                    title="Reporte de Incidentes",
-                    color="Conteo",
-                    # "YlOrRd": De Amarillo a Rojo Intenso (Alerta)
-                    color_continuous_scale="YlOrRd",
+                    title="Tipos de Incidentes",
+                    color="Experiencia Negativa", # <--- Cambio clave
+                    # "Vivid": Colores vibrantes pero oscuros
+                    color_discrete_sequence=px.colors.qualitative.Vivid,
                 )
                 fig_exp.update_xaxes(showticklabels=False)
+                fig_exp.update_layout(showlegend=False) # Ocultamos leyenda para limpiar
                 st.plotly_chart(fig_exp, use_container_width=True)
 
         # BLOQUE 4: FACTORES
+# BLOQUE 4: FACTORES
+# BLOQUE 4: FACTORES (COLORES NEUTROS Y DISTINTIVOS)
         st.markdown("---")
         st.markdown("**Factores Determinantes de Confianza**")
         factor_cols = [c for c in df.columns if c.startswith("factor_")]
@@ -281,14 +284,24 @@ if df is not None:
             x=factor_counts.values,
             y=factor_counts.index,
             orientation="h",
-            color=factor_counts.values,
-            # "Viridis": La paleta más profesional en ciencia de datos (Azul a Amarillo)
-            color_continuous_scale="Viridis",
-            title="Desglose de Factores de Confianza (Múltiple Respuesta)",
+            
+            # 1. Coloreamos por Categoría (para que sean diferentes)
+            color=factor_counts.index,
+            
+            # 2. Usamos la paleta "Antique":
+            # Son colores 'Tierra' y 'Pastel Oscuro' (Musgo, Ladrillo, Pizarra, Ocre).
+            # Se diferencian muy bien entre sí, pero son elegantes y apagados.
+            color_discrete_sequence=px.colors.qualitative.Antique,
+            
+            title="Desglose de Factores de Confianza",
             template=template_style,
         )
+        
+        # Limpiamos el gráfico ocultando la leyenda (redundante)
+        fig_factors.update_layout(showlegend=False)
+        
         st.plotly_chart(fig_factors, use_container_width=True)
-
+        
     # --- TAB 2: INFERENCIA ---
     with tab2:
         st.subheader("Pruebas de Hipótesis")
