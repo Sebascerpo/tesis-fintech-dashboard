@@ -515,6 +515,7 @@ if df is not None:
             st.markdown("---")
 
 # BLOQUE 5: ANÁLISIS DE FACTORES Y SEGURIDAD
+# BLOQUE 5: ANÁLISIS DE FACTORES (CON PALETA 'SAFE')
             st.subheader("3. ¿Qué hace que la gente se sienta segura?")
             st.markdown(
                 "Analizamos la correlación estadística: ¿Qué palabras clave están más asociadas a decir 'Me siento seguro'?"
@@ -538,38 +539,38 @@ if df is not None:
                     by="Correlación", ascending=True
                 )
 
-                # GRÁFICO DE BARRAS DIVERGENTES (ESCALA SPECTRAL)
+                # GRÁFICO DE BARRAS CON PALETA "SAFE"
                 fig_factors = px.bar(
                     df_corr_factors,
                     x="Correlación",
                     y="Factor",
                     orientation="h",
-                    color="Correlación",
                     
-                    # USAMOS "SPECTRAL": 
-                    # Va de Rojo (Negativo) -> Naranja -> Amarillo -> Verde -> Azul (Positivo).
-                    # Es la escala más distintiva visualmente para mostrar contrastes fuertes
-                    # sin perder la elegancia académica.
-                    color_continuous_scale=px.colors.diverging.Spectral,
+                    # CAMBIO CLAVE 1: Coloreamos por 'Factor' (Categoría)
+                    # Esto permite que cada barra tenga un color distinto de la lista 'Safe'
+                    color="Factor",
+                    
+                    # CAMBIO CLAVE 2: Tu paleta solicitada
+                    color_discrete_sequence=px.colors.qualitative.Safe,
                     
                     title="Impacto de cada característica en la sensación de Seguridad",
                 )
 
-                fig_factors.add_vline(x=0, line_width=2, line_color="#333333") # Línea central gris oscuro
+                fig_factors.add_vline(x=0, line_width=2, line_color="#333333")
+                
                 fig_factors.update_layout(
-                    xaxis_title="Relación con la Seguridad (Izquierda: Negativa | Derecha: Positiva)",
+                    xaxis_title="Relación con la Seguridad (Negativa < 0 > Positiva)",
                     yaxis_title="",
                     template="simple_white",
-                    # Ajuste para asegurar que el texto se lea bien
+                    showlegend=False, # Ocultamos la leyenda para que se vea más limpio
                     font=dict(size=12)
                 )
                 st.plotly_chart(fig_factors, use_container_width=True)
 
                 st.info(
                     """
-                **Guía de colores:**
-                * **Azul/Verde (Derecha):** Factores "Protectores". Quienes mencionan esto suelen sentirse MÁS seguros.
-                * **Rojo/Naranja (Izquierda):** Factores de "Alerta". Quienes mencionan esto suelen sentirse MENOS seguros o escépticos.
+                **Nota de Lectura:** Las barras que van hacia la **derecha** son características que aumentan la seguridad percibida.
+                Las barras hacia la **izquierda** son factores asociados a menor seguridad en esta muestra.
                 """
                 )
         else:
