@@ -234,7 +234,7 @@ if df is not None:
             st.plotly_chart(fig_sec, use_container_width=True)
 
         with col_s2:
-            st.markdown("**Fintech vs. Banca**")
+            st.markdown("**Fintech vs. Banca Tradicional**")
             if "comp_banca" in df.columns:
                 df_comp = df["comp_banca"].value_counts().reset_index()
                 df_comp.columns = ["Opinión", "Conteo"]
@@ -244,7 +244,7 @@ if df is not None:
                     values="Conteo",
                     title="Comparativa de Protección",
                     # Paleta distintiva: Dorado oscuro, Azul Medianoche, Gris
-                    color_discrete_sequence=['#B8860B', '#191970', '#A9A9A9'],
+                    color_discrete_sequence=px.colors.qualitative.Safe,
                 )
                 st.plotly_chart(fig_comp, use_container_width=True)
 
